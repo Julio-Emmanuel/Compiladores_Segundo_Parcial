@@ -1,0 +1,7 @@
+inicio
+  entero miVariable;
+  miVariable := 10;
+  si (miVariable > 5)
+    miVariable := miVariable + 1.5;
+  fin
+fin
