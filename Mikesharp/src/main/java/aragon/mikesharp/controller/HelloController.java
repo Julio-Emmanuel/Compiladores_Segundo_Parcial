@@ -18,41 +18,63 @@ public class HelloController {
         File selectedFile = fileChooser.showOpenDialog(null);
 
         if (selectedFile != null) {
-            analzadorLexico(selectedFile);
+            analizadorLexico(selectedFile);
         }
     }
 
-    private void analzadorLexico(File file) {
+    private void analizadorLexico(File file) {
         resultArea.clear();
-        try (Reader reader = new FileReader(file)) {
+        StringBuilder reporteFinal = new StringBuilder();
 
-            Lexer lexer = new Lexer(reader);
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            int numeroLinea = 1;
 
+            while ((line = br.readLine()) != null) {
+                // Saltamos líneas vacías
+                if (line.trim().isEmpty()) {
+                    reporteFinal.append("Línea ").append(numeroLinea).append(": (Vacía)\n");
+                    numeroLinea++;
+                    continue;
+                }
 
-            PrintStream oldOut = System.out;
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            System.setOut(new PrintStream(baos));
+                // Analizamos la línea actual
+                try (Reader lineReader = new StringReader(line)) {
+                    Lexer lexer = new Lexer(lineReader);
 
+                    // Capturamos la salida de esta línea específica
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    PrintStream ps = new PrintStream(baos);
+                    PrintStream oldOut = System.out;
+                    System.setOut(ps);
 
-            while (lexer.yylex() != Lexer.YYEOF) {
+                    // Ejecutamos el lexer para los tokens de esta línea
+                    while (lexer.yylex() != Lexer.YYEOF) { }
 
+                    System.setOut(oldOut);
+                    String tokensEncontrados = baos.toString().trim();
+
+                    // Si no hubo errores léxicos, la línea es válida para el Lexer
+                    reporteFinal.append("Línea ").append(numeroLinea)
+                            .append(": [VÁLIDA] -> ")
+                            .append(tokensEncontrados.replace("\n", ", "))
+                            .append("\n");
+
+                } catch (Error e) {
+                    // Si el lexer lanza un Error (por la regla "."), la línea es inválida
+                    reporteFinal.append("Línea ").append(numeroLinea)
+                            .append(": [ERROR LÉXICO] -> ")
+                            .append(e.getMessage())
+                            .append("\n");
+                }
+
+                numeroLinea++;
             }
 
-
-            System.setOut(oldOut);
-            String output = baos.toString();
-
-            if (output.isEmpty()) {
-                resultArea.setText("Análisis completado. No se detectaron tokens o el archivo está vacío.");
-            } else {
-                resultArea.setText("--- Resultado del Análisis Lexico ---\n" + output);
-            }
+            resultArea.setText("--- Reporte de Validación por Línea ---\n" + reporteFinal.toString());
 
         } catch (IOException e) {
-            resultArea.setText("Error al leer el archivo: " + e.getMessage());
-        } catch (Error e) {
-
-            resultArea.setText("ERROR LÉXICO DETECTADO:\n" + e.getMessage());
+            resultArea.setText("Error al procesar el archivo: " + e.getMessage());
         }
     }
 }
