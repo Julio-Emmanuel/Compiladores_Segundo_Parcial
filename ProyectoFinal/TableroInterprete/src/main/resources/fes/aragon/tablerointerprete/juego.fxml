@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.canvas.Canvas?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fes.aragon.tablerointerprete.controlador.ControladorJuego">
+
+    <left>
+        <VBox spacing="10" alignment="TOP_CENTER" style="-fx-padding: 10;">
+            <Canvas fx:id="canvasJuego" width="1000" height="1000" style="-fx-border-color: black; -fx-border-width: 2;"/>
+        </VBox>
+    </left>
+
+    <center>
+        <VBox spacing="10" alignment="TOP_CENTER" style="-fx-padding: 10;">
+            <Label text="CÓDIGO DEL PROGRAMA" style="-fx-font-weight: bold; -fx-font-size: 14;"/>
+            <TextArea fx:id="txtCodigo" prefWidth="400" prefHeight="400" style="-fx-font-family: monospace;"/>
+
+            <Label text="CÓDIGO INTERMEDIO" style="-fx-font-weight: bold; -fx-font-size: 14;"/>
+            <TextArea fx:id="txtCodigoIntermedio" prefWidth="400" prefHeight="250" editable="false" style="-fx-font-family: monospace; -fx-background-color: #f0f0f0;"/>
+
+            <HBox spacing="10" alignment="CENTER">
+                <Button fx:id="btnEjecutar" text="▶ EJECUTAR" style="-fx-font-size: 14; -fx-background-color: #4CAF50; -fx-text-fill: white;"/>
+                <Button fx:id="btnGuardar" text="💾 GUARDAR" style="-fx-font-size: 14;"/>
+                <Button fx:id="btnCargar" text="📂 CARGAR" style="-fx-font-size: 14;"/>
+                <Button fx:id="btnReiniciar" text="🔄 REINICIAR" style="-fx-font-size: 14;"/>
+            </HBox>
+
+            <Label text="MENSAJES" style="-fx-font-weight: bold; -fx-font-size: 12;"/>
+            <TextArea fx:id="txtMensajes" prefHeight="80" editable="false" style="-fx-background-color: #fff3e0;"/>
+        </VBox>
+    </center>
+
+</BorderPane>

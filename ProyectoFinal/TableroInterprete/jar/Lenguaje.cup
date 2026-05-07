@@ -1,0 +1,167 @@
+package fes.aragon.tablerointerprete.analizador;
+
+import java_cup.runtime.*;
+import fes.aragon.tablerointerprete.modelo.Instruccion;
+import fes.aragon.tablerointerprete.modelo.Ciclo;
+import fes.aragon.tablerointerprete.modelo.InstruccionMovimiento;
+import fes.aragon.tablerointerprete.modelo.InstruccionMover;
+import java.util.ArrayList;
+import java.util.List;
+
+parser code {:
+    private List<Instruccion> instrucciones = new ArrayList<>();
+    private List<String> codigoIntermedio = new ArrayList<>();
+    public int posicionXInicio = 1;
+    public int posicionYInicio = 1;
+    
+    public List<Instruccion> getInstrucciones() {
+        return instrucciones;
+    }
+    
+    public List<String> getCodigoIntermedio() {
+        return codigoIntermedio;
+    }
+    
+    public int getPosicionXInicio() {
+        return posicionXInicio;
+    }
+    
+    public int getPosicionYInicio() {
+        return posicionYInicio;
+    }
+    
+    public void agregarInstruccion(Instruccion inst) {
+        instrucciones.add(inst);
+        codigoIntermedio.add(inst.toIntermediateCode());
+    }
+    
+    public void agregarInstruccion(String codIntermedio, Instruccion inst) {
+        if (inst != null) {
+            instrucciones.add(inst);
+        }
+        codigoIntermedio.add(codIntermedio);
+    }
+    
+    public void reiniciar() {
+        instrucciones.clear();
+        codigoIntermedio.clear();
+    }
+    
+    public void error(String message) {
+        System.err.println("Error sintáctico: " + message);
+    }
+:}
+
+/* Terminales */
+terminal INICIO, FIN, ARRIBA, ABAJO, IZQUIERDA, DERECHA, MOVER, REPITE, HASTA;
+terminal Integer ENTERO;
+terminal String IDENTIFICADOR;
+terminal COMA, IGUAL;
+
+/* No terminales */
+non terminal programa;
+non terminal List<Instruccion> instrucciones;
+non terminal Instruccion instruccion;
+non terminal Instruccion movimiento;
+non terminal Instruccion repeticion;
+non terminal Instruccion asignacion;
+non terminal String variable;
+non terminal Integer valor;
+non terminal List<Instruccion> bloque;
+
+start with programa;
+
+/* REGLA PRINCIPAL */
+programa ::= INICIO ENTERO:posX ENTERO:posY instrucciones:insts FIN
+    {: 
+        parser.reiniciar();
+        parser.posicionXInicio = posX;
+        parser.posicionYInicio = posY;
+        parser.agregarInstruccion("i " + posX + " " + posY, null);
+        for(Instruccion inst : insts) {
+            parser.agregarInstruccion(inst);
+        }
+        parser.agregarInstruccion("fn", null);
+        System.out.println("Compilado. Inicio en: (" + posX + "," + posY + 
+                          "). Instrucciones: " + insts.size());
+    :}
+    ;
+
+instrucciones ::= instruccion:inst
+    {:
+        List<Instruccion> lista = new ArrayList<>();
+        lista.add(inst);
+        RESULT = lista;
+    :}
+    | instrucciones:lista instruccion:inst
+    {:
+        lista.add(inst);
+        RESULT = lista;
+    :}
+    ;
+
+instruccion ::= movimiento:mov
+    {: RESULT = mov; :}
+    | repeticion:rep
+    {: RESULT = rep; :}
+    | asignacion:asig
+    {: RESULT = asig; :}
+    ;
+
+movimiento ::= ARRIBA
+    {:
+        Instruccion inst = new InstruccionMovimiento("arriba", 0, 0);
+        parser.agregarInstruccion("ARR", inst);
+        RESULT = inst;
+    :}
+    | ABAJO
+    {:
+        Instruccion inst = new InstruccionMovimiento("abajo", 0, 0);
+        parser.agregarInstruccion("ABA", inst);
+        RESULT = inst;
+    :}
+    | IZQUIERDA
+    {:
+        Instruccion inst = new InstruccionMovimiento("izquierda", 0, 0);
+        parser.agregarInstruccion("IZQ", inst);
+        RESULT = inst;
+    :}
+    | DERECHA
+    {:
+        Instruccion inst = new InstruccionMovimiento("derecha", 0, 0);
+        parser.agregarInstruccion("DER", inst);
+        RESULT = inst;
+    :}
+    | MOVER ENTERO:pasos
+    {:
+        Instruccion inst = new InstruccionMover(pasos, 0, 0);
+        parser.agregarInstruccion("MV " + pasos, inst);
+        RESULT = inst;
+    :}
+    ;
+
+/* ASIGNACIÓN: a = 1 */
+asignacion ::= IDENTIFICADOR:var IGUAL ENTERO:num
+    {:
+        // Crear instrucción de asignación
+        InstruccionAsignacion inst = new InstruccionAsignacion(var, num, 0, 0);
+        parser.agregarInstruccion("SET " + var + " = " + num, inst);
+        RESULT = inst;
+    :}
+    ;
+
+/* CICLO: repite ... hasta a = 5 */
+repeticion ::= REPITE bloque:bloq HASTA IDENTIFICADOR:var IGUAL ENTERO:num
+    {:
+        // El ciclo NO tiene variable en la línea de repite
+        // La variable está solo en la línea "hasta"
+        // Usamos "temp" como variable temporal y 1 como inicio por defecto
+        Ciclo ciclo = new Ciclo(var, 1, bloq, var, num, 0, 0);
+        parser.agregarInstruccion("REP [" + var + "=1.." + num + "]", ciclo);
+        RESULT = ciclo;
+    :}
+    ;
+
+bloque ::= instrucciones:insts
+    {: RESULT = insts; :}
+    ;
