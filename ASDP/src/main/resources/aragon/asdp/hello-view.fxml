@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox alignment="CENTER" spacing="10.0" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="aragon.asdp.controller.HelloController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+    </padding>
+
+    <HBox spacing="10.0" alignment="CENTER">
+        <Label text="Cadena de entrada:"/>
+        <TextField fx:id="txtEntrada" prefWidth="300.0" promptText="ej. (id+id)*id"/>
+        <Button text="Analizar" onAction="#analizar"/>
+    </HBox>
+
+    <TableView fx:id="tablaAnalisis" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colPila" text="Pila (Estados)" prefWidth="150.0"/>
+            <TableColumn fx:id="colSimbolos" text="Símbolos" prefWidth="150.0"/>
+            <TableColumn fx:id="colEntrada" text="Entrada" prefWidth="200.0"/>
+            <TableColumn fx:id="colAccion" text="Acción" prefWidth="150.0"/>
+        </columns>
+    </TableView>
+</VBox>
