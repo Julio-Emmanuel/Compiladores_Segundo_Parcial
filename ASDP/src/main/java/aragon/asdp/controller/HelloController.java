@@ -21,37 +21,32 @@ public class HelloController {
     private final ObservableList<Paso> listaPasos = FXCollections.observableArrayList();
 
     private final String[][] tablaACCION = {
-            {"D5", "", "", "D4", "", ""},
-            {"", "D6", "", "", "", "ACEPTAR"},
-            {"", "R2", "D7", "", "R2", "R2"},
-            {"", "R4", "R4", "", "R4", "R4"},
-            {"D5", "", "", "D4", "", ""},
-            {"", "R6", "R6", "", "R6", "R6"},
-            {"D5", "", "", "D4", "", ""},
-            {"D5", "", "", "D4", "", ""},
-            {"", "D6", "", "", "D11", ""},
-            {"", "R1", "D7", "", "R1", "R1"},
-            {"", "R3", "R3", "", "R3", "R3"},
-            {"", "R5", "R5", "", "R5", "R5"}
+            {"D2", "R3", "", "", ""},      // Estado 0: Inicio. Si ve 'a' desplaza, si ve 'b' reduce A->lambda
+            {"", "", "", "", "ACEPTAR"},   // Estado 1: S aceptada
+            {"", "R2", "", "", ""},        // Estado 2: A -> a. Reduce.
+            {"", "D4", "", "", ""},        // Estado 3: S -> A. Espera B.
+            {"", "", "D6", "R6", ""},      // Estado 4: B -> b. Espera C o d.
+            {"", "", "", "", "R1"},        // Estado 5: S -> AB. Reduce.
+            {"", "", "", "R5", ""},        // Estado 6: C -> c. Reduce.
+            {"", "", "", "D8", ""},        // Estado 7: B -> bC. Espera d.
+            {"", "", "", "", "R4"}         // Estado 8: B -> bCd. Reduce.
     };
+
 
     private final int[][] tablaGOTO = {
-            {1, 2, 3},
-            {0, 0, 0},
-            {0, 0, 0},
-            {0, 0, 0},
-            {8, 2, 3},
-            {0, 0, 0},
-            {0, 9, 3},
-            {0, 0, 10},
-            {0, 0, 0},
-            {0, 0, 0},
-            {0, 0, 0},
-            {0, 0, 0}
+            {1, 3, 0, 0},
+            {0, 0, 0, 0},
+            {0, 0, 0, 0},
+            {0, 0, 5, 0},
+            {0, 0, 0, 7},
+            {0, 0, 0, 0},
+            {0, 0, 0, 0},
+            {0, 0, 0, 0},
+            {0, 0, 0, 0}
     };
 
-    private final String[] reglasLadoIzquierdo = {"", "E", "E", "T", "T", "F", "F"};
-    private final int[] reglasLongitud = {0, 3, 1, 3, 1, 3, 1};
+    private final String[] reglasLadoIzquierdo = {"", "S", "A", "A", "B", "C", "C"};
+    private final int[] reglasLongitud = {0, 2, 1, 0, 3, 1, 0};
 
     @FXML
     public void initialize() {
@@ -126,21 +121,21 @@ public class HelloController {
 
     private int obtenerColumna(String t) {
         switch (t) {
-            case "id": return 0;
-            case "+": return 1;
-            case "*": return 2;
-            case "(": return 3;
-            case ")": return 4;
-            case ";": return 5;
+            case "a": return 0;
+            case "b": return 1;
+            case "c": return 2;
+            case "d": return 3;
+            case ";": return 4;
             default: return -1;
         }
     }
 
     private int obtenerColumnaGOTO(String s) {
         switch (s) {
-            case "E": return 0;
-            case "T": return 1;
-            case "F": return 2;
+            case "S": return 0;
+            case "A": return 1;
+            case "B": return 2;
+            case "C": return 3;
             default: return -1;
         }
     }
