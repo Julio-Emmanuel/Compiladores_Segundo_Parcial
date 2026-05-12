@@ -67,6 +67,11 @@ public class Nave {
     }
 
     public void mover(String direccion, int pasos) {
+        this.direccion = direccion; // Guardamos la dirección para el siguiente 'mover'
+        cambiarDireccion(direccion); // Cambiamos la imagen (arriba.png, abajo.png, etc.)
+
+        // Si pasos es 0 (como en 'abajo'), no entrará al ciclo y solo cambiará de vista
+        // Si pasos es > 0 (como en 'mover 5'), se desplazará
         for (int i = 0; i < pasos; i++) {
             moverUnPaso(direccion);
         }
@@ -84,4 +89,15 @@ public class Nave {
     public int getX() { return x; }
     public int getY() { return y; }
     public int getTamano() { return tamano; }
+    public String getDireccionActual() {
+        return direccion;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
 }

@@ -11,7 +11,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import java.io.*;
-import java_cup.runtime.Symbol;
+import java.util.List;
 
 public class ControladorJuego {
     @FXML private Canvas canvasJuego;
@@ -65,49 +65,91 @@ public class ControladorJuego {
 
     private void ejecutarCodigo() {
         try {
-            String codigo = txtCodigo.getText();
+            String codigoTexto = txtCodigo.getText();
 
-            // Parsear el código
-            ByteArrayInputStream stream = new ByteArrayInputStream(codigo.getBytes());
+            // 1. Analizar el código
+            ByteArrayInputStream stream = new ByteArrayInputStream(codigoTexto.getBytes());
             AnalizadorLexico lexico = new AnalizadorLexico(stream);
             AnalizadorSintactico parser = new AnalizadorSintactico(lexico);
             parser.parse();
 
-            // Mostrar código intermedio
+            // 2. Limpiar mensajes y mostrar código intermedio
+            txtMensajes.clear();
             txtCodigoIntermedio.clear();
-            for(String inter : parser.getCodigoIntermedio()) {
+            List<String> lineasIntermedias = parser.getCodigoIntermedio();
+
+            for(String inter : lineasIntermedias) {
                 txtCodigoIntermedio.appendText(inter + "\n");
             }
 
-            // Obtener coordenadas de inicio del parser
-            int xInicio = parser.getPosicionXInicio();
-            int yInicio = parser.getPosicionYInicio();
+            // 3. INTÉRPRETE: Procesar la lista de Strings
+            // IMPORTANTE: No toques la variable 'nave' antes de este ciclo
+            for (String linea : lineasIntermedias) {
+                String[] partes = linea.split(" ");
+                String cmd = partes[0].toLowerCase();
 
-            // Posicionar la nave en la celda indicada
-            int pixelX = 50 + (xInicio - 1) * 50;
-            int pixelY = 50 + (yInicio - 1) * 50;
-            nave = new Nave(pixelX, pixelY);
 
-            txtMensajes.appendText("Nave iniciando en celda: (" + xInicio + "," + yInicio + ")\n");
 
-            // El punto ya existe (no regenerar)
-            int puntoCeldaX = (punto.getX() - 50) / 50 + 1;
-            int puntoCeldaY = (punto.getY() - 50) / 50 + 1;
-            txtMensajes.appendText("Objetivo: Punto en celda (" + puntoCeldaX + "," + puntoCeldaY + ")\n");
+                System.out.println("Comando recibido: " + linea);
+                System.out.println("CMD = " + cmd);
 
-            // Ejecutar instrucciones (ya no hay POS)
-            ContextoJuego contexto = new ContextoJuego(nave, punto);
-            for(Instruccion inst : parser.getInstrucciones()) {
-                inst.ejecutar(contexto);
+                switch (cmd) {
+
+                    case "i":
+                    case "inicio":
+                        int ix = Integer.parseInt(partes[1]);
+                        int iy = Integer.parseInt(partes[2]);
+
+                        nave.setPosition(
+                                50 + (ix - 1) * 50,
+                                50 + (iy - 1) * 50
+                        );
+
+                        txtMensajes.appendText(
+                                "Posicionada en inicio: (" + ix + "," + iy + ")\n"
+                        );
+                        break;
+
+                    case "ar":
+                    case "arriba":
+                        nave.cambiarDireccion("arriba");
+                        break;
+
+                    case "ab":
+                    case "abajo":
+                        nave.cambiarDireccion("abajo");
+                        break;
+
+                    case "iz":
+                    case "izquierda":
+                        nave.cambiarDireccion("izquierda");
+                        break;
+
+                    case "de":
+                    case "derecha":
+                        nave.cambiarDireccion("derecha");
+                        break;
+
+                    case "mv":
+                    case "mover":
+                        int pasos = Integer.parseInt(partes[1]);
+                        nave.mover(nave.getDireccionActual(), pasos);
+                        break;
+                }
+                // Dibujar después de cada comando para que no se quede estática
                 dibujarGrid();
-                Thread.sleep(300);
             }
 
-            // Verificar resultado
-            if(contexto.isExito()) {
-                txtMensajes.appendText("✅ ¡ÉXITO! Llegaste al punto\n");
+            // 4. Verificar si la posición final coincide con el punto
+            // Calculamos en qué celda quedó para el mensaje
+            int finalCeldaX = (nave.getX() - 50) / 50 + 1;
+            int finalCeldaY = (nave.getY() - 50) / 50 + 1;
+
+            if (nave.getX() == punto.getX() && nave.getY() == punto.getY()) {
+                txtMensajes.appendText(" ÉXITO Terminaste en: (" + finalCeldaX + "," + finalCeldaY + ")\n");
+                mostrarDialogoExito();
             } else {
-                txtMensajes.appendText("❌ No llegaste al punto\n");
+                txtMensajes.appendText(" No llegaste. Te detuviste en: (" + finalCeldaX + "," + finalCeldaY + ")\n");
             }
 
         } catch(Exception e) {
@@ -126,47 +168,35 @@ public class ControladorJuego {
 
     private void reiniciarJuego() {
         inicializarJuego();
+        txtMensajes.clear();
+        txtCodigoIntermedio.clear();
         txtMensajes.appendText("Juego reiniciado\n");
     }
 
     private void guardarCodigo() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivos del Compilador", "*.fes"));
-        fileChooser.setTitle("Guardar código");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivos FES", "*.fes"));
         File archivo = fileChooser.showSaveDialog(stage);
-
         if(archivo != null) {
             try(BufferedWriter writer = new BufferedWriter(new FileWriter(archivo))) {
                 writer.write(txtCodigo.getText());
-                txtMensajes.appendText("Código guardado en: " + archivo.getName() + "\n");
-            } catch(IOException e) {
-                txtMensajes.appendText("Error al guardar: " + e.getMessage() + "\n");
-            }
+            } catch(IOException e) { e.printStackTrace(); }
         }
     }
 
     private void cargarCodigo() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivos del Compilador", "*.fes"));
-        fileChooser.setTitle("Cargar código");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivos FES", "*.fes"));
         File archivo = fileChooser.showOpenDialog(stage);
-
         if(archivo != null) {
             try(BufferedReader reader = new BufferedReader(new FileReader(archivo))) {
-                StringBuilder contenido = new StringBuilder();
-                String linea;
-                while((linea = reader.readLine()) != null) {
-                    contenido.append(linea).append("\n");
-                }
-                txtCodigo.setText(contenido.toString());
-                txtMensajes.appendText("Código cargado desde: " + archivo.getName() + "\n");
-            } catch(IOException e) {
-                txtMensajes.appendText("Error al cargar: " + e.getMessage() + "\n");
-            }
+                StringBuilder sb = new StringBuilder();
+                String l;
+                while((l = reader.readLine()) != null) sb.append(l).append("\n");
+                txtCodigo.setText(sb.toString());
+            } catch(IOException e) { e.printStackTrace(); }
         }
     }
 
-    public void setStage(Stage stage) {
-        this.stage = stage;
-    }
+    public void setStage(Stage stage) { this.stage = stage; }
 }

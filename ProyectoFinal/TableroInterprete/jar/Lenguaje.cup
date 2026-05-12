@@ -1,54 +1,28 @@
 package fes.aragon.tablerointerprete.analizador;
 
 import java_cup.runtime.*;
-import fes.aragon.tablerointerprete.modelo.Instruccion;
-import fes.aragon.tablerointerprete.modelo.Ciclo;
-import fes.aragon.tablerointerprete.modelo.InstruccionMovimiento;
-import fes.aragon.tablerointerprete.modelo.InstruccionMover;
 import java.util.ArrayList;
 import java.util.List;
 
 parser code {:
-    private List<Instruccion> instrucciones = new ArrayList<>();
+    // Esta lista almacenará el código intermedio (ej. "i 10 10", "mv 2")
     private List<String> codigoIntermedio = new ArrayList<>();
-    public int posicionXInicio = 1;
-    public int posicionYInicio = 1;
-    
-    public List<Instruccion> getInstrucciones() {
-        return instrucciones;
-    }
-    
+
     public List<String> getCodigoIntermedio() {
         return codigoIntermedio;
     }
-    
-    public int getPosicionXInicio() {
-        return posicionXInicio;
+
+    // Método para agregar las líneas al código intermedio
+    public void emitir(String instruccion) {
+        codigoIntermedio.add(instruccion);
     }
-    
-    public int getPosicionYInicio() {
-        return posicionYInicio;
-    }
-    
-    public void agregarInstruccion(Instruccion inst) {
-        instrucciones.add(inst);
-        codigoIntermedio.add(inst.toIntermediateCode());
-    }
-    
-    public void agregarInstruccion(String codIntermedio, Instruccion inst) {
-        if (inst != null) {
-            instrucciones.add(inst);
-        }
-        codigoIntermedio.add(codIntermedio);
-    }
-    
+
     public void reiniciar() {
-        instrucciones.clear();
         codigoIntermedio.clear();
     }
-    
-    public void error(String message) {
-        System.err.println("Error sintáctico: " + message);
+
+    public void syntax_error(Symbol s) {
+        System.err.println("Error sintáctico en Línea " + (s.left + 1) + " Columna " + (s.right + 1) + ". Token: " + s.value);
     }
 :}
 
@@ -60,108 +34,57 @@ terminal COMA, IGUAL;
 
 /* No terminales */
 non terminal programa;
-non terminal List<Instruccion> instrucciones;
-non terminal Instruccion instruccion;
-non terminal Instruccion movimiento;
-non terminal Instruccion repeticion;
-non terminal Instruccion asignacion;
-non terminal String variable;
-non terminal Integer valor;
-non terminal List<Instruccion> bloque;
+non terminal instrucciones;
+non terminal instruccion;
+non terminal movimiento;
+non terminal repeticion;
+non terminal asignacion;
+non terminal List bloque;
 
 start with programa;
 
 /* REGLA PRINCIPAL */
-programa ::= INICIO ENTERO:posX ENTERO:posY instrucciones:insts FIN
-    {: 
-        parser.reiniciar();
-        parser.posicionXInicio = posX;
-        parser.posicionYInicio = posY;
-        parser.agregarInstruccion("i " + posX + " " + posY, null);
-        for(Instruccion inst : insts) {
-            parser.agregarInstruccion(inst);
-        }
-        parser.agregarInstruccion("fn", null);
-        System.out.println("Compilado. Inicio en: (" + posX + "," + posY + 
-                          "). Instrucciones: " + insts.size());
-    :}
-    ;
-
-instrucciones ::= instruccion:inst
+programa ::= INICIO ENTERO:posX ENTERO:posY instrucciones FIN
     {:
-        List<Instruccion> lista = new ArrayList<>();
-        lista.add(inst);
-        RESULT = lista;
-    :}
-    | instrucciones:lista instruccion:inst
-    {:
-        lista.add(inst);
-        RESULT = lista;
+        // Genera la línea inicial: i 10 10
+        parser.emitir("i " + posX + " " + posY);
     :}
     ;
 
-instruccion ::= movimiento:mov
-    {: RESULT = mov; :}
-    | repeticion:rep
-    {: RESULT = rep; :}
-    | asignacion:asig
-    {: RESULT = asig; :}
+instrucciones ::= instruccion
+    | instrucciones instruccion
     ;
 
+instruccion ::= movimiento
+    | repeticion
+    | asignacion
+    ;
+
+/* GENERACIÓN DE CÓDIGO INTERMEDIO SEGÚN TU EJEMPLO */
 movimiento ::= ARRIBA
-    {:
-        Instruccion inst = new InstruccionMovimiento("arriba", 0, 0);
-        parser.agregarInstruccion("ARR", inst);
-        RESULT = inst;
-    :}
+    {: parser.emitir("ar"); :}
     | ABAJO
-    {:
-        Instruccion inst = new InstruccionMovimiento("abajo", 0, 0);
-        parser.agregarInstruccion("ABA", inst);
-        RESULT = inst;
-    :}
+    {: parser.emitir("ab"); :}
     | IZQUIERDA
-    {:
-        Instruccion inst = new InstruccionMovimiento("izquierda", 0, 0);
-        parser.agregarInstruccion("IZQ", inst);
-        RESULT = inst;
-    :}
+    {: parser.emitir("iz"); :}
     | DERECHA
-    {:
-        Instruccion inst = new InstruccionMovimiento("derecha", 0, 0);
-        parser.agregarInstruccion("DER", inst);
-        RESULT = inst;
-    :}
+    {: parser.emitir("de"); :}
     | MOVER ENTERO:pasos
-    {:
-        Instruccion inst = new InstruccionMover(pasos, 0, 0);
-        parser.agregarInstruccion("MV " + pasos, inst);
-        RESULT = inst;
-    :}
+    {: parser.emitir("mv " + pasos); :}
     ;
 
-/* ASIGNACIÓN: a = 1 */
+/* ASIGNACIÓN (Opcional, siguiendo el estilo corto) */
 asignacion ::= IDENTIFICADOR:var IGUAL ENTERO:num
+    {: parser.emitir("set " + var + " " + num); :}
+    ;
+
+/* REPETICIÓN */
+repeticion ::= REPITE bloque HASTA IDENTIFICADOR:var IGUAL ENTERO:num
     {:
-        // Crear instrucción de asignación
-        InstruccionAsignacion inst = new InstruccionAsignacion(var, num, 0, 0);
-        parser.agregarInstruccion("SET " + var + " = " + num, inst);
-        RESULT = inst;
+        // Indica el fin del ciclo y la condición
+        parser.emitir("rep " + var + " " + num);
     :}
     ;
 
-/* CICLO: repite ... hasta a = 5 */
-repeticion ::= REPITE bloque:bloq HASTA IDENTIFICADOR:var IGUAL ENTERO:num
-    {:
-        // El ciclo NO tiene variable en la línea de repite
-        // La variable está solo en la línea "hasta"
-        // Usamos "temp" como variable temporal y 1 como inicio por defecto
-        Ciclo ciclo = new Ciclo(var, 1, bloq, var, num, 0, 0);
-        parser.agregarInstruccion("REP [" + var + "=1.." + num + "]", ciclo);
-        RESULT = ciclo;
-    :}
-    ;
-
-bloque ::= instrucciones:insts
-    {: RESULT = insts; :}
+bloque ::= instrucciones
     ;
