@@ -1,25 +1,23 @@
-package mx.unam.programa_9.controlador;
+package mx.unam.programa_11.controlador;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
-import javafx.scene.paint.Color;
 
-import java.awt.*;
-import java.io.*;
-import java.net.URL;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
+import mx.unam.programa_11.modelo.*;
 
-import mx.unam.programa_9.modelo.*;
+public class controlador {
 
-import javax.swing.text.html.ImageView;
-
-public class controlador{
 
     @FXML
     private TextField txtInput;
@@ -29,6 +27,7 @@ public class controlador{
     private TextFlow flowResultado;
 
     private List<String> lineasArchivo = new ArrayList<>();
+
 
     @FXML
     private void cargarArchivo() {
@@ -105,8 +104,8 @@ public class controlador{
             if (expLimpia.isEmpty()) continue;
 
             try {
-                modelo.Lexer lexer = new modelo.Lexer(expLimpia);
-                modelo.Parser parser = new modelo.Parser(lexer.getTokens());
+                Lexer lexer = new Lexer(expLimpia);
+                Parser parser = new Parser(lexer.getTokens());
                 parser.s();
 
                 mostrarEnPantalla(expLimpia, "Sintaxis Correcta", Color.GREEN);

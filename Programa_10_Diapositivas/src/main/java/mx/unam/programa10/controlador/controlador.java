@@ -1,6 +1,5 @@
 package mx.unam.programa10.controlador;
 
-
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
@@ -14,80 +13,54 @@ import java.nio.file.Files;
 import java.util.List;
 
 public class controlador {
-
     @FXML
     private TextFlow txtArchivo;
-
     @FXML
     private TextFlow txtResultado;
-
     @FXML
     private TextField txtEntrada;
-
     private List<String> lineasArchivo;
 
     @FXML
     public void cargarArchivo() {
-
         try {
-
             FileChooser fc = new FileChooser();
-
             fc.getExtensionFilters().add(
                     new FileChooser.ExtensionFilter(
                             "Archivos de texto",
                             "*.txt"
                     )
             );
-
             File archivo = fc.showOpenDialog(null);
-
             if (archivo != null) {
-
                 lineasArchivo = Files.readAllLines(archivo.toPath());
-
                 txtArchivo.getChildren().clear();
-
                 for (String linea : lineasArchivo) {
-
                     Text texto = new Text(linea + "\n");
-
                     txtArchivo.getChildren().add(texto);
                 }
             }
-
         } catch (Exception e) {
-
             e.printStackTrace();
         }
     }
 
     @FXML
     public void evaluar() {
-
         txtResultado.getChildren().clear();
-
         String manual = txtEntrada.getText();
-
         if (manual != null && !manual.trim().isEmpty()) {
-
             evaluarLinea(manual, 0);
         }
 
         if (lineasArchivo != null) {
-
             int lineaNumero = 1;
-
             for (String linea : lineasArchivo) {
-
-                // IGNORAR LÍNEAS VACÍAS
                 if (linea.trim().isEmpty()) {
                     lineaNumero++;
                     continue;
                 }
-
                 evaluarLinea(linea, lineaNumero);
-
                 lineaNumero++;
             }
         }
@@ -95,58 +68,47 @@ public class controlador {
 
     private void evaluarLinea(String linea, int numeroLinea) {
 
-        Parser parser = new Parser(linea);
-
-        String resultado = parser.analizar();
-
-        Text texto;
-
-        if (resultado.equals("VÁLIDA")) {
-
-            if (numeroLinea == 0) {
-
-                texto = new Text(
-                        "[Manual] " +
-                                linea +
-                                " -> VÁLIDA\n"
-                );
-
-            } else {
-
-                texto = new Text(
-                        "[Línea " + numeroLinea + "] " +
-                                linea +
-                                " -> VÁLIDA\n"
-                );
+        String[] expresiones = linea.split(";");
+        int contadorExpr = 1;
+        for (String expr : expresiones) {
+            expr = expr.trim();
+            if (expr.isEmpty()) {
+                continue;
             }
-
-            texto.setFill(Color.GREEN);
-
-        } else {
-
+            expr = expr + ";";
+            Parser parser = new Parser(expr);
+            String resultado = parser.analizar();
+            Text texto;
+            String encabezado;
             if (numeroLinea == 0) {
-
+                encabezado =
+                        "[Manual - Expr " + contadorExpr + "] ";
+            } else {
+                encabezado =
+                        "[Línea " + numeroLinea +
+                                " - Expr " + contadorExpr + "] ";
+            }
+            if (resultado.equals("VÁLIDA")) {
                 texto = new Text(
-                        "[Manual] " +
-                                linea +
+                        encabezado +
+                                expr +
+                                " -> VÁLIDA\n"
+                );
+                texto.setFill(Color.GREEN);
+            }
+            else {
+                texto = new Text(
+                        encabezado +
+                                expr +
                                 " -> " +
                                 resultado +
                                 "\n"
                 );
 
-            } else {
-
-                texto = new Text(
-                        "[Línea " + numeroLinea + "] " +
-                                linea +
-                                " -> " +
-                                resultado +
-                                "\n"
-                );
+                texto.setFill(Color.RED);
             }
-
-            texto.setFill(Color.RED);
+            txtResultado.getChildren().add(texto);
+            contadorExpr++;
         }
-        txtResultado.getChildren().add(texto);
     }
 }

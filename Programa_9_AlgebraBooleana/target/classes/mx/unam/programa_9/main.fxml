@@ -7,7 +7,7 @@
 <?import javafx.scene.text.TextFlow?>
 
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mx.unam.programa_9.controlador.controlador">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.6" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mx.unam.programa_9.controlador.controlador">
    <children>
       <TextFlow fx:id="flowArchivo" layoutX="26.0" layoutY="154.0" prefHeight="200.0" prefWidth="200.0" />
       <TextFlow fx:id="flowResultado" layoutX="376.0" layoutY="154.0" prefHeight="200.0" prefWidth="200.0" />

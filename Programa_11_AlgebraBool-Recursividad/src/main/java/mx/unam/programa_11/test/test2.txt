@@ -1,0 +1,3 @@
+not(true and false); not(or false and and true)
+
+nottrue;

@@ -1,38 +1,28 @@
 package mx.unam.programa10.modelo;
 
 public class Parser {
-
     private Lexer lexer;
     private Token token;
-
     public Parser(String entrada) {
-
         lexer = new Lexer(entrada);
         token = lexer.getToken();
     }
-
     private void getToken() {
         token = lexer.getToken();
     }
-
     public String analizar() {
-
         try {
-
             secuencia();
-
             if (token.tipo != TipoToken.EOF) {
                 return "Error: tokens sobrantes";
             }
-
             return "VÁLIDA";
-
         } catch (Exception e) {
-
             return "INVÁLIDA -> " + e.getMessage();
         }
     }
 
+    //secuencia ::= (expresion ; )+
     private void secuencia() {
         do {
             expresion();
@@ -48,6 +38,8 @@ public class Parser {
         } while (token.tipo != TipoToken.EOF);
     }
 
+    //expresion ::= exprSimple([= != < <= > >=]exprSimple)?
+
     private void expresion() {
         exprSimple();
         if (token.tipo == TipoToken.IGUAL ||
@@ -60,6 +52,7 @@ public class Parser {
             exprSimple();
         }
     }
+    //exprSimple ::= +?termino(termino[+-OR]termino)? | -?termino(termino[+-OR]termino)?
     private void exprSimple() {
         if (token.tipo == TipoToken.MAS ||
                 token.tipo == TipoToken.MENOS) {
@@ -73,6 +66,7 @@ public class Parser {
             termino();
         }
     }
+    //termino ::= factor([* / DIV MOD AND]factor)*
     private void termino() {
         factor();
         while (token.tipo == TipoToken.POR ||
@@ -85,6 +79,7 @@ public class Parser {
         }
     }
 
+    //factor ::= ID | NUM | NOT factor | ( expresion )
     private void factor() {
         switch (token.tipo) {
             case ID:
@@ -97,7 +92,6 @@ public class Parser {
                 break;
             case AB_PAR:
                 getToken();
-
                 expresion();
                 if (token.tipo != TipoToken.CE_PAR) {
                     throw new RuntimeException(
@@ -110,7 +104,6 @@ public class Parser {
                 throw new RuntimeException(
                         "Token inesperado: " + token.lexema
                 );
-
         }
     }
 }

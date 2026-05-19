@@ -7,7 +7,6 @@ import java.util.regex.Pattern;
 
 public class modelo {
 
-    // Tokens reconocidos
     enum TokenType {
         TRUE, FALSE, AND, OR, NOT, PAREN_IZQ, PAREN_DER, PUNTO_COMA, FIN
     }
@@ -35,7 +34,6 @@ public class modelo {
             while (matcher.find()) {
                 String match = matcher.group();
                 int pos = matcher.start();
-                        //Comparamos la entrada con los tokens reconocidos
                 switch (match) {
                     case "true":  tokens.add(new Token(TokenType.TRUE, "true", pos)); break;
                     case "false": tokens.add(new Token(TokenType.FALSE, "false", pos)); break;
@@ -46,7 +44,6 @@ public class modelo {
                     case ")":     tokens.add(new Token(TokenType.PAREN_DER, ")", pos)); break;
                     case ";":     tokens.add(new Token(TokenType.PUNTO_COMA, ";", pos)); break;
                     default:
-                        // Si no coincide con nada es error lexico
                         throw new RuntimeException("Carácter inválido '" + match + "' en la posición " + pos);
                 }
             }
@@ -76,7 +73,7 @@ public class modelo {
         }
 
 
-        //GRAMATICA PROGRAMADA
+        //GRAMATICA 
 
         // S ::= E ;
         public void s() {

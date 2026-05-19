@@ -1,6 +1,7 @@
 module mx.unam.programa_9 {
     requires javafx.controls;
     requires javafx.fxml;
+    requires java.desktop;
 
 
     opens mx.unam.programa_9 to javafx.fxml;
